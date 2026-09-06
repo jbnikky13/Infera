@@ -1,8 +1,8 @@
-# Nexora
+# Infera
 
 **News, signals and intelligence for a faster world.**
 
-Nexora is an AI-powered news intelligence platform covering **business, markets, trends, entertainment and Africa**. It is designed to explain not only what happened, but why it matters and what to watch next.
+Infera is an AI-powered news intelligence platform covering **business, markets, trends, entertainment and Africa**. It is designed to explain not only what happened, but why it matters and what to watch next.
 
 ## Current build
 
@@ -15,7 +15,7 @@ Nexora is an AI-powered news intelligence platform covering **business, markets,
 - Curated source registry with source attribution
 - Duplicate filtering
 - Supabase schema for persistent stories, sources, entities and trend scores
-- Scheduled GitHub Actions ingestion workflow
+- Scheduled ingestion workflow
 - Environment template for Supabase and Gemini
 
 ## Architecture
@@ -23,7 +23,7 @@ Nexora is an AI-powered news intelligence platform covering **business, markets,
 ```text
 Trusted RSS sources
        ↓
-Nexora ingestion engine
+Infera ingestion engine
        ↓
 Normalize + deduplicate
        ↓
@@ -33,7 +33,7 @@ Gemini analysis layer
        ↓
 Trend / momentum scoring
        ↓
-Nexora web feed
+Infera web feed
        ↓
 Telegram / X / email alerts
 ```
