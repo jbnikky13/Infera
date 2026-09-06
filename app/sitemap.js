@@ -1,0 +1,2 @@
+const base = process.env.NEXT_PUBLIC_SITE_URL || 'https://infera.vercel.app'
+export default function sitemap(){return[{url:base,lastModified:new Date(),changeFrequency:'hourly',priority:1},{url:`${base}/trending`,lastModified:new Date(),changeFrequency:'hourly',priority:.9},{url:`${base}/brief`,lastModified:new Date(),changeFrequency:'daily',priority:.8},{url:`${base}/my-intelligence`,lastModified:new Date(),changeFrequency:'daily',priority:.7}]}
