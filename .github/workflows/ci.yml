@@ -10,17 +10,28 @@ on:
 permissions:
   contents: read
 
+env:
+  CI: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
+          node-version: 24
+          cache: false
+
+      - name: Show runtime
+        run: node --version && npm --version
+
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+
       - name: Production build
         run: npm run build
