@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Refresh Infera intelligence
+      - name: Refresh and persist intelligence
         env:
           INFERA_URL: ${{ secrets.INFERA_URL }}
         run: |
@@ -23,13 +23,16 @@ jobs:
             -H 'User-Agent: InferaScheduler/1.0' \
             "$INFERA_URL/api/news" > /tmp/infera-response.json
           python - <<'PY'
-          import json
-          with open('/tmp/infera-response.json') as f:
-              data=json.load(f)
-          print(f"Infera refresh completed: {data.get('count', 0)} stories returned")
+          import json, sys
+          with open('/tmp/infera-response.json') as f: data=json.load(f)
+          print(f"Infera ingestion completed: {data.get('count', 0)} stories")
+          p=data.get('persistence') or {}
+          print(f"Persistence: {p.get('persisted')} ({p.get('count', 0)} stories)")
+          if not p.get('persisted'):
+              print(f"Persistence reason: {p.get('reason', 'unknown')}")
+              sys.exit(1)
           failed=[x for x in data.get('sourceStatus', []) if x.get('error')]
           if failed:
               print(f"Sources with errors: {len(failed)}")
-              for item in failed:
-                  print(f"- {item.get('source')}: {item.get('error')}")
+              for item in failed: print(f"- {item.get('source')}: {item.get('error')}")
           PY
