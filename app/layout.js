@@ -1,6 +1,10 @@
 import './globals.css'
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000')
+
 export const metadata = {
+  metadataBase: new URL(siteUrl),
   title: 'Infera — News, Signals & Intelligence',
   description: 'Understand what happened, why it matters, and what is moving next.',
   applicationName: 'Infera',
