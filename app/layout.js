@@ -1,7 +1,7 @@
 import './globals.css'
 
 export const metadata = {
-  title: 'Nexora — News, Signals & Intelligence',
+  title: 'Infera — News, Signals & Intelligence',
   description: 'Understand what happened, why it matters, and what is moving next.',
 }
 
