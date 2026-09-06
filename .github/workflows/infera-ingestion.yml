@@ -1,0 +1,35 @@
+name: Infera Intelligence Ingestion
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Refresh Infera intelligence
+        env:
+          INFERA_URL: ${{ secrets.INFERA_URL }}
+        run: |
+          set -euo pipefail
+          test -n "$INFERA_URL"
+          curl --fail --silent --show-error --retry 3 --retry-delay 5 \
+            -H 'User-Agent: InferaScheduler/1.0' \
+            "$INFERA_URL/api/news" > /tmp/infera-response.json
+          python - <<'PY'
+          import json
+          with open('/tmp/infera-response.json') as f:
+              data=json.load(f)
+          print(f"Infera refresh completed: {data.get('count', 0)} stories returned")
+          failed=[x for x in data.get('sourceStatus', []) if x.get('error')]
+          if failed:
+              print(f"Sources with errors: {len(failed)}")
+              for item in failed:
+                  print(f"- {item.get('source')}: {item.get('error')}")
+          PY
