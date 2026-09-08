@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: infera-intelligence-ingestion
+  cancel-in-progress: false
+
 jobs:
   ingest:
     runs-on: ubuntu-latest
@@ -18,15 +22,12 @@ jobs:
           INFERA_URL: ${{ secrets.INFERA_URL }}
         run: |
           set -euo pipefail
-
           if [ -z "${INFERA_URL:-}" ]; then
             echo "ERROR: GitHub Actions secret INFERA_URL is missing or empty."
             exit 1
           fi
-
           BASE_URL="${INFERA_URL%/}"
           echo "Checking Infera production endpoint..."
-
           HEALTH_STATUS=$(curl -sS -L --retry 3 --retry-delay 5 --connect-timeout 10 --max-time 60 \
             -H 'User-Agent: InferaScheduler/1.0' \
             -o /tmp/infera-health.json -w '%{http_code}' \
@@ -34,12 +35,9 @@ jobs:
               echo "ERROR: Could not connect to $BASE_URL/api/health"
               exit 1
             }
-
           echo "Health HTTP status: $HEALTH_STATUS"
-          echo "Health response:"
           cat /tmp/infera-health.json
           echo
-
           if [ "$HEALTH_STATUS" -lt 200 ] || [ "$HEALTH_STATUS" -ge 300 ]; then
             echo "ERROR: Infera health endpoint is not healthy."
             exit 1
@@ -51,9 +49,8 @@ jobs:
         run: |
           set -euo pipefail
           BASE_URL="${INFERA_URL%/}"
-
           echo "Calling $BASE_URL/api/news ..."
-          HTTP_STATUS=$(curl -sS -L --retry 3 --retry-delay 5 --connect-timeout 10 --max-time 180 \
+          HTTP_STATUS=$(curl -sS -L --retry 3 --retry-delay 5 --connect-timeout 10 --max-time 300 \
             -H 'Accept: application/json' \
             -H 'User-Agent: InferaScheduler/1.0' \
             -o /tmp/infera-response.json -w '%{http_code}' \
@@ -61,58 +58,41 @@ jobs:
               echo "ERROR: Request to /api/news failed at the network level."
               exit 1
             }
-
           echo "News endpoint HTTP status: $HTTP_STATUS"
-
           if [ "$HTTP_STATUS" -lt 200 ] || [ "$HTTP_STATUS" -ge 300 ]; then
             echo "ERROR: /api/news returned HTTP $HTTP_STATUS"
-            echo "Response body:"
             cat /tmp/infera-response.json || true
             exit 1
           fi
-
           if [ ! -s /tmp/infera-response.json ]; then
             echo "ERROR: /api/news returned an empty response."
             exit 1
           fi
-
           python - <<'PY'
           import json, sys
           from pathlib import Path
-
-          path = Path('/tmp/infera-response.json')
-          raw = path.read_text(errors='replace')
-
+          raw = Path('/tmp/infera-response.json').read_text(errors='replace')
           try:
               data = json.loads(raw)
           except json.JSONDecodeError as exc:
-              print('ERROR: /api/news did not return valid JSON.')
-              print(f'JSON error: {exc}')
-              print('Response body:')
+              print(f'ERROR: invalid JSON: {exc}')
               print(raw[:10000])
               sys.exit(1)
-
           if not isinstance(data, dict):
-              print('ERROR: /api/news returned JSON, but not a JSON object.')
-              print(raw[:10000])
+              print('ERROR: /api/news returned non-object JSON')
               sys.exit(1)
-
           print(f"Infera ingestion completed: {data.get('count', 0)} stories")
           print(f"AI configured: {data.get('aiConfigured', False)}")
-
           p = data.get('persistence') or {}
           print(f"Persistence: {p.get('persisted')} ({p.get('count', 0)} stories)")
-
           if not p.get('persisted'):
               print(f"Persistence reason: {p.get('reason', 'unknown')}")
               sys.exit(1)
-
           failed = [x for x in data.get('sourceStatus', []) if x.get('error')]
           if failed:
-              print(f"Sources with errors: {len(failed)}")
+              print(f"WARNING: {len(failed)} source(s) failed")
               for item in failed:
                   print(f"- {item.get('source')}: {item.get('error')}")
-              print('WARNING: Some sources failed, but persisted intelligence is available.')
           else:
               print('All configured news sources completed without reported errors.')
           PY
