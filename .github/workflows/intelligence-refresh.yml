@@ -1,18 +1,18 @@
 name: Infera Intelligence Refresh
 
+# Retained as a manual compatibility workflow only.
+# Scheduled production ingestion is owned by infera-ingestion.yml.
 on:
-  schedule:
-    - cron: '*/15 * * * *'
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   refresh:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger intelligence pipeline
-        env:
-          INFERA_URL: ${{ secrets.INFERA_URL }}
+      - name: Explain canonical ingestion workflow
         run: |
-          test -n "$INFERA_URL" || { echo "INFERA_URL secret is required"; exit 1; }
-          curl --fail --silent --show-error --retry 3 --retry-delay 5 "$INFERA_URL/api/intelligence" > /tmp/infera-response.json
-          node -e "const fs=require('fs'); const x=JSON.parse(fs.readFileSync('/tmp/infera-response.json')); console.log('Infera refreshed:', x.count, 'stories;', x.highSignalCount, 'high-signal;', x.persistence?.persisted ? x.persistence.count + ' persisted' : 'persistence not configured')"
+          echo "Scheduled ingestion is handled by Infera Intelligence Ingestion."
+          echo "Run .github/workflows/infera-ingestion.yml for production refreshes."
