@@ -1,20 +1,18 @@
-name: Nexora News Ingestion
+name: Legacy News Ingestion
 
+# Retained as a manual compatibility workflow only.
+# Production ingestion is owned by infera-ingestion.yml.
 on:
-  schedule:
-    - cron: '*/15 * * * *'
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   ingest:
     runs-on: ubuntu-latest
     steps:
-      - name: Trigger Nexora ingestion endpoint
-        env:
-          NEXORA_INGEST_URL: ${{ secrets.NEXORA_INGEST_URL }}
+      - name: Explain canonical ingestion workflow
         run: |
-          if [ -z "$NEXORA_INGEST_URL" ]; then
-            echo "NEXORA_INGEST_URL is not configured; skipping scheduled ingestion."
-            exit 0
-          fi
-          curl --fail --retry 3 --max-time 60 "$NEXORA_INGEST_URL"
+          echo "The legacy Nexora ingestion workflow is disabled."
+          echo "Scheduled production ingestion is handled by Infera Intelligence Ingestion."
