@@ -1,5 +1,6 @@
 'use client'
 
+import './support.css'
 import Link from 'next/link'
 import { ArrowUpRight, Copy, Check } from 'lucide-react'
 import { useState } from 'react'
