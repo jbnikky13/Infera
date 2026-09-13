@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { ingestSources } from '../../../lib/news-ingest';
 import { analyzeStories } from '../../../lib/intelligence';
 import { enrichStories } from '../../../lib/gemini';
-import { persistStories, getRecentStories } from '../../../lib/supabase-rest';
+import { persistStories } from '../../../lib/supabase-ingestion';
+import { getRecentStories } from '../../../lib/supabase-rest';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,8 +32,6 @@ export async function GET() {
       batches.map((batch) => batch.source)
     );
 
-    // Return the database records after persistence so every public story
-    // has its real UUID. The homepage uses this UUID for /story/[id].
     if (persistence.persisted) {
       const persistedStories = await getRecentStories(100);
       if (persistedStories.length) stories = persistedStories;
